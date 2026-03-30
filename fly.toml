@@ -1,0 +1,52 @@
+# fly.toml — Fly.io deployment configuration
+# Docs: https://fly.io/docs/reference/configuration/
+# Deploy with: fly deploy
+
+app = "class-schedule-system"
+primary_region = "sin"   # Singapore — closest to ap-south-1 Supabase
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Set secrets (never in fly.toml):
+#   fly secrets set DATABASE_URL="postgresql://..."
+#   fly secrets set DIRECT_URL="postgresql://..."
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 250
+    soft_limit = 200
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/api/teachers"
+    protocol = "http"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

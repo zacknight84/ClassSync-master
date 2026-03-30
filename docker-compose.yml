@@ -1,0 +1,61 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+# Class Schedule System — Docker Compose
+#
+# Database: External Supabase PostgreSQL (no local DB container)
+# The app connects via DATABASE_URL / DIRECT_URL in .env
+# ─────────────────────────────────────────────────────────────
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner # Explicitly use the lean production stage
+    image: class-schedule-system:latest
+    container_name: class-schedule-app
+
+    # Load environment variables from .env file
+    # DATABASE_URL and DIRECT_URL point to your Supabase instance
+    env_file:
+      - .env
+
+    # Override / add runtime env vars (these win over .env)
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    ports:
+      - "3000:3000"
+
+    # Restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Health check mirrors the Dockerfile HEALTHCHECK
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/teachers" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Resource limits (adjust for your host)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
+    # Metadata labels
+    labels:
+      - "com.classsync.project=class-schedule-system"
+      - "com.classsync.version=1.0.0"
+      - "com.classsync.description=Next.js 14 Class Schedule Management System"
+
+# No local volumes needed — all data lives in Supabase

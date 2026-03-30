@@ -1,0 +1,18 @@
+# railway.toml — Railway deployment configuration
+# Docs: https://docs.railway.app/reference/config-as-code
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "./docker-entrypoint.sh"
+healthcheckPath = "/api/teachers"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Railway injects DATABASE_URL from its variables panel
+# Add these in Railway Dashboard → Variables:
+#   DATABASE_URL  = your Supabase transaction pooler URL
+#   DIRECT_URL    = your Supabase session pooler URL
